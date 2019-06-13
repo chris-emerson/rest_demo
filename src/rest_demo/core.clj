@@ -8,12 +8,6 @@
             [clojure.data.json :as json])
   (:gen-class))
 
-; (defn -main
-;   "I don't do a whole lot ... yet."
-;   [& args]
-;   (println "Hello, World!")
-;
-
 ; Simple Body Page
 (defn simple-body-page [req] ;(3)
   {:status  200
@@ -36,7 +30,6 @@
                 (pp/pprint req)
                 (str "Hello " (:name (:params req))))})
 
-
 ; my people-collection mutable collection vector
 (def people-collection (atom []))
 
@@ -49,20 +42,13 @@
 (addperson "Functional" "Human")
 (addperson "Micky" "Mouse")
 
-
-
-
-
-
-;(concat people-collection (addperson "Functional" "Human"))
-
 ; Return List of People
 (defn people-handler [req]
         {:status  200
          :headers {"Content-Type" "text/json"}
          :body    (str (json/write-str @people-collection))})
 
-; Partial function to get the parameter specified by pname
+; Helper to get the parameter specified by pname from :params object in req
 (defn getparameter [req pname] (get (:params req) pname))
 
 ; Add a new person into the people-collection
@@ -81,17 +67,7 @@
   (GET "/people/add" [] addperson-handler)
   (route/not-found "Error, page not found!"))
 
-
-
-  ; (GET "/pageb" [] pageb)
-  ; (wrap-defaults hello-world-str site-defaults)
-  ; (GET "/json" [] mail-handler)
-;  (POST "/postoffice" [] mail-handler)
-;  (ANY "/anything-goes" [] general-handler)
-
-
-
-;
+; Our main entry function
 (defn -main
   "This is our main entry point"
   [& args]
