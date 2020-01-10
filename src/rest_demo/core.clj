@@ -5,6 +5,7 @@
             [ring.middleware.defaults :refer :all]
             [clojure.pprint :as pp]
             [clojure.string :as str]
+            [clojure.spec.alpha :as s]
             [clojure.data.json :as json])
   (:gen-class))
 
@@ -16,19 +17,19 @@
 ;
 ; request-example
 (defn request-example [req]
-     {:status  200
-      :headers {"Content-Type" "text/html"}
-      :body    (->
-                (pp/pprint req)
-                (str "Request Object: " req))})
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    (->
+             (pp/pprint req)
+             (str "Request Object: " req))})
 
 ; Hello-name handler
 (defn hello-name [req]
-     {:status  200
-      :headers {"Content-Type" "text/html"}
-      :body    (->
-                (pp/pprint req)
-                (str "Hello " (:name (:params req))))})
+  {:status  200
+   :headers {"Content-Type" "text/html"}
+   :body    (->
+             (pp/pprint req)
+             (str "Hello " (:name (:params req))))})
 
 ; my people-collection mutable collection vector
 (def people-collection (atom []))
@@ -36,7 +37,7 @@
 ;Collection Helper functions to add a new person
 (defn addperson [firstname surname]
   (swap! people-collection conj {:firstname (str/capitalize firstname)
-                                     :surname (str/capitalize surname)}))
+                                 :surname (str/capitalize surname)}))
 
 ; Example JSON objects
 (addperson "Functional" "Human")
@@ -44,19 +45,23 @@
 
 ; Return List of People
 (defn people-handler [req]
-        {:status  200
-         :headers {"Content-Type" "text/json"}
-         :body    (str (json/write-str @people-collection))})
+  {:status  200
+   :headers {"Content-Type" "text/json"}
+   :body    (str (json/write-str @people-collection))})
 
 ; Helper to get the parameter specified by pname from :params object in req
-(defn getparameter [req pname] (get (:params req) pname))
+(defn getparameter [req pname]
+  (cond
+    (s/valid? string? (get (:params req) pname)) "Valid string input"
+    :else (throw (AssertionError. "Invalid input. Check required fields")))
+  (get (:params req) pname))
 
 ; Add a new person into the people-collection
 (defn addperson-handler [req]
-        {:status  200
-         :headers {"Content-Type" "text/json"}
-         :body    (-> (let [p (partial getparameter req)]
-                        (str (json/write-str (addperson (p :firstname) (p :surname))))))})
+  {:status  200
+   :headers {"Content-Type" "text/json"}
+   :body    (-> (let [p (partial getparameter req)]
+                  (str (json/write-str (addperson (p :firstname) (p :surname))))))})
 
 ; Our main routes
 (defroutes app-routes
